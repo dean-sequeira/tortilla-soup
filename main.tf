@@ -1,5 +1,14 @@
+variable "region" {
+  default = "us-east-1"
+}
 
+variable "profile" {
+  default = "default"
+}
 
+variable "node_type" {
+  default = "dc2.large"
+}
 
 terraform {
   required_providers {
@@ -11,11 +20,20 @@ terraform {
 }
 
 provider "aws" {
-  profile = "default"
-  region  = "us-east-1"
+  profile = var.profile
+  region  = var.region
 }
 
 locals {
+  password = {
+    length           = 16
+    special          = true
+    override_special = "!$%&*()-_=+[]{}<>:?"
+  }
+  unique_suffix = {
+    length  = 6
+    special = false
+  }
   statements = [
     { name = "create_analytics_database", sql = "CREATE DATABASE RAW_LANDING" },
     { name = "create_sandbox_database", sql = "CREATE DATABASE SANDBOX" },
@@ -26,14 +44,14 @@ locals {
 }
 
 resource "random_password" "password" {
-  length           = 16
-  special          = true
-  override_special = "!$%&*()-_=+[]{}<>:?"
+  length           = local.password.length
+  special          = local.password.special
+  override_special = local.password.override_special
 }
 
 resource "random_string" "unique_suffix" {
-  length  = 6
-  special = false
+  length  = local.unique_suffix.length
+  special = local.unique_suffix.special
 }
 
 resource "aws_redshift_cluster" "redshift_cluster" {
@@ -41,9 +59,8 @@ resource "aws_redshift_cluster" "redshift_cluster" {
   database_name      = "analytics"
   master_username    = "remoteadmin"
   master_password    = random_password.password.result
-  node_type          = "dc2.large"
+  node_type          = var.node_type
   cluster_type       = "single-node"
-
   skip_final_snapshot = true
 }
 
