@@ -15,10 +15,9 @@ variable "sql" {
 }
 
 
-resource "aws_redshiftdata_statement" "this" {
+resource "aws_redshiftdata_statement" "statement" {
   cluster_identifier = var.cluster_identifier
   database           = var.database
   db_user            = var.db_user
   sql                = var.sql
-
 }
