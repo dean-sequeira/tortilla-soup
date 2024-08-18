@@ -1,15 +1,3 @@
-variable "region" {
-  default = "us-east-1"
-}
-
-variable "profile" {
-  default = "default"
-}
-
-variable "node_type" {
-  default = "dc2.large"
-}
-
 terraform {
   required_providers {
     aws = {
@@ -26,21 +14,14 @@ provider "aws" {
 
 locals {
   password = {
-    length           = 16
-    special          = true
+    length           = var.password_length
+    special          = var.password_special
     override_special = "!$%&*()-_=+[]{}<>:?"
   }
   unique_suffix = {
     length  = 6
     special = false
   }
-  statements = [
-    { name = "create_analytics_database", sql = "CREATE DATABASE RAW_LANDING" },
-    { name = "create_sandbox_database", sql = "CREATE DATABASE SANDBOX" },
-    { name = "create_dbt_developer_role", sql = "CREATE ROLE DBT_DEVELOPER" },
-    { name = "create_analyst_role", sql = "CREATE ROLE ANALYST" },
-    { name = "create_transformer_role", sql = "CREATE ROLE TRANSFORMER" }
-  ]
 }
 
 resource "random_password" "password" {
@@ -55,12 +36,12 @@ resource "random_string" "unique_suffix" {
 }
 
 resource "aws_redshift_cluster" "redshift_cluster" {
-  cluster_identifier = "tf-redshift-cluster"
-  database_name      = "analytics"
-  master_username    = "remoteadmin"
-  master_password    = random_password.password.result
-  node_type          = var.node_type
-  cluster_type       = "single-node"
+  cluster_identifier  = var.cluster_identifier
+  database_name       = var.database_name
+  master_username     = var.master_username
+  master_password     = random_password.password.result
+  node_type           = var.node_type
+  cluster_type        = var.cluster_type
   skip_final_snapshot = true
 }
 
@@ -82,8 +63,8 @@ resource "aws_secretsmanager_secret_version" "redshift_connection" {
 }
 
 module "execute_statements" {
-  for_each           = {for stmt in local.statements : stmt.name => stmt}
-  source             = "./modules/redshiftdata_statement"
+  for_each           = {for stmt in var.statements : stmt.name => stmt}
+  source             = "./modules/statements"
   cluster_identifier = aws_redshift_cluster.redshift_cluster.cluster_identifier
   database           = aws_redshift_cluster.redshift_cluster.database_name
   db_user            = aws_redshift_cluster.redshift_cluster.master_username
