@@ -15,7 +15,7 @@ The infrastructure includes the creation of multiple databases, roles, and users
 
 - `.gitignore`: Specifies files and directories to be ignored by Git.
 - `main.tf`: Main Terraform configuration file.
-- `modules/redshiftdata_statement/main.tf`: Module for executing SQL statements on the Redshift cluster.
+- `modules/statements/main.tf`: Module for executing SQL statements on the Redshift cluster.
 - `README.md`: Project documentation.
 
 ## Terraform Configuration
@@ -25,6 +25,14 @@ The infrastructure includes the creation of multiple databases, roles, and users
 - `region`: AWS region to deploy the resources (default: `us-east-1`).
 - `profile`: AWS CLI profile to use (default: `default`).
 - `node_type`: Type of Redshift node (default: `dc2.large`).
+- `cluster_identifier`: The identifier for the Redshift cluster (default: `tf-redshift-cluster`).
+- `database_name`: The name of the database to create during cluster creation (default: `analytics`).
+- `master_username`: The master username for the Redshift cluster (default: `remote_admin`).
+- `password_length`: The length of the password to generate (default: `16`).
+- `password_special`: Whether to include special characters in the generated password (default: `true`).
+- `cluster_type`: The type of cluster to create (default: `single-node`).
+- `statements`: The list of SQL statements to execute after the cluster is created, used to add additional databases and roles.
+
 
 ### Resources
 
